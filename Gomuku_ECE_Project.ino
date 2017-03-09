@@ -7,6 +7,7 @@ CRGB leds[NUM_LEDS];
 
 const CRGB HalfRed = {50,15,0};
 const CRGB HalfBlue = {0,15,50};
+const CRGB HalfGreen = {30,100,30};
 CRGB Colour;
 
 const int SW1_pin = 3; // digital pin connected to SW
@@ -17,8 +18,13 @@ const int SW2_pin = 4; // digital pin connected to SW
 const int X2_pin = A2; // analog pin connected to VRx
 const int Y2_pin = A3; // analog pin connected to VRy
 
+struct ledType{
+  int num;
+  CRGB colour;
+};
+
 int cursor_x, cursor_y;
-int board_colour[8][8];
+ledType board_colour[8][8];
 
 
 
@@ -63,7 +69,7 @@ int coord_to_led(int*x, int*y){
 
 
 // To display the correct LED choice
-void draw_out(int which_player,int ledno)
+CRGB draw_out(int which_player,int ledno)
 {
   
   if(which_player==1){
@@ -75,6 +81,8 @@ void draw_out(int which_player,int ledno)
   leds[ledno] = Colour;
   
   FastLED.show();
+
+  return Colour;
 }
 
 
@@ -114,7 +122,7 @@ void get_input(int which_player, int*Switch, int* _x, int* _y )
 }
 
 
-
+// Adds all the cursor movements till the joystick is clicked
 void finalCoord(int which_player, int*a, int*b){
   int x, y, Switch;
   do{
@@ -133,14 +141,15 @@ void boardColour(int*x, int*y){
 }
 
 
-
+CRGB c;
 //execute the game once
 void getPoint(int*x, int*y, int*which_player, int*ledno){
-  
+
   finalCoord(*which_player, x, y);
   ledno = coord_to_led(x, y);
-  draw_out(*which_player, *ledno);
-  
+  c = draw_out(*which_player, *ledno);
+  board_colour[*x][*y].num = ledno;
+  board_colour[*x][*y].colour = c;
 }
 
 
@@ -149,4 +158,14 @@ void getPoint(int*x, int*y, int*which_player, int*ledno){
 void loop() {
   int x, y, which_player, ledNo;
   getPoint(&x, &y, &which_player, &ledNo);
+  for(int i = 0; i<8; i++){
+    
+    for(int j = 0; j<8; j++){
+      leds[board_colour[i][j].num] = board_colour[i][j].colour;
+    }//column using inner for loop
+    
+  }//row using outer for loop
+
+  FastLED.show();
+  
 }
