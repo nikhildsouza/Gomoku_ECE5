@@ -34,10 +34,8 @@ void setup() {
   FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
   
   pinMode(SW1_pin, INPUT);
-  digitalWrite(SW1_pin, HIGH);
   
   pinMode(SW2_pin, INPUT);
-  digitalWrite(SW2_pin, HIGH);
   
   Serial.begin(9600);//for higher speed - 115200
 
@@ -60,7 +58,7 @@ void led_to_coord(int ledno, int*x, int*y){
 int coord_to_led(int*x, int*y){
   
   if ( ((*y)%2) == 1 ){ //check for odd row numbers
-    *x = 8 - (*x);//8x8 grid is in a snake-like unidirectional form
+    *x = 7 - (*x);//8x8 grid is in a snake-like unidirectional form
   }
   
   int ledno = (*y-1)*8 + *x;
@@ -96,9 +94,12 @@ void get_input(int which_player, int*Switch, int* _x, int* _y )
   if(which_player == 0) {
     x_raw = analogRead(X1_pin);
     y_raw = analogRead(Y1_pin);
-  }else {
+    *Switch = digitalRead(SW1_pin);
+  }
+  else {
     x_raw = analogRead(X2_pin);
     y_raw = analogRead(Y2_pin);
+    *Switch = digitalRead(SW2_pin);
   }
   //analogRead returns a range from 0 to 1023
   //500 is midpoint where nothing is done to joystick
@@ -122,8 +123,6 @@ void get_input(int which_player, int*Switch, int* _x, int* _y )
   leds[num] = HalfGreen; // cursor colour is green
   FastLED.show();
   
-  //read the switch
-    
   *_x = x; *_y = y;
   
 }
@@ -135,11 +134,12 @@ void finalCoord(int which_player, int*a, int*b){
   
   int x, y, Switch;
   do{
+    
     get_input(which_player, &Switch, &x, &y);
     a += x;
     b += y;
-    // get input for Switch
-  }while(Switch != 0);
+    
+  }while(Switch != 1);
   
 }
 
@@ -173,6 +173,7 @@ boolean game_End(){
   boolean status = false;
   int ctr_row = 0, ctr_diagonal = 0;
   ledType temp;
+  
   for(int i = 1; i<8; i++){
     
     for(int j = 0; j<7; j++){
@@ -189,18 +190,17 @@ boolean game_End(){
     
   }//row using outer for loop
 
-  for(int i = 1; i<8; i++){
+
+  for(int i = 1; i<9; i++){
     
     for(int j = 0; j<7; j++){
       
       if(board_colour[i-1][j].num = board_colour[i-1][j+1].num){
         ctr_row++;
       }
-      if(board_colour[i-1][j].num = board_colour[i][j+1].num) {
-        ctr_diagonal++;
-      }
-
-      if(ctr_diagonal==5 || ctr_row==5){
+      else ctr_row = 0;
+      
+      if(ctr_row == 4){
         status = true;
         return status;  
       }
@@ -209,7 +209,49 @@ boolean game_End(){
     
   }//row using outer for loop
 
+ 
+  for(int i = 0; i<4; i++){
+ 
+    int j = 0, temp_i = i;
+    do{
+  
+      if(board_colour[temp_i][j].num = board_colour[temp_i+1][j+1].num) {
+        ctr_diagonal++;
+      }
+      else ctr_diagonal = 0;
 
+      if(ctr_diagonal == 4){
+        status = true;
+        return status;  
+      }
+      j++;
+      temp_i++;
+      
+    }while(temp_i<7);    
+     
+  }//row using outer for loop
+
+  for(int i = 0; i<4; i++){
+ 
+    int j = 7, temp_i = i;
+    do{
+  
+      if(board_colour[temp_i][j].num = board_colour[temp_i+1][j-1].num) {
+        ctr_diagonal++;
+      }
+      else ctr_diagonal = 0;
+
+      if(ctr_diagonal == 4){
+        status = true;
+        return status;  
+      }
+      j--;
+      temp_i++;
+      
+    }while(temp_i<7);    
+     
+  }//row using outer for loop
+  
   return status;
 
 }
