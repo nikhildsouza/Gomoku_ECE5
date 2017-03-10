@@ -143,21 +143,21 @@ void boardColour(int*x, int*y){
 
 CRGB c;
 //execute the game once
-void getPoint(int*x, int*y, int*which_player, int*ledno){
+void getPoint(){
 
-  finalCoord(*which_player, x, y);
-  ledno = coord_to_led(x, y);
-  c = draw_out(*which_player, *ledno);
-  board_colour[*x][*y].num = ledno;
-  board_colour[*x][*y].colour = c;
+  int x, y, which_player, ledno;
+  finalCoord(which_player, &x, &y);
+  ledno = coord_to_led(&x, &y);
+  c = draw_out(which_player, ledno);
+  board_colour[x][y].num = ledno;
+  board_colour[x][y].colour = c;
 }
 
 
 
 // To repeatedly run the desired code
 void loop() {
-  int x, y, which_player, ledNo;
-  getPoint(&x, &y, &which_player, &ledNo);
+  
   for(int i = 0; i<8; i++){
     
     for(int j = 0; j<8; j++){
@@ -169,4 +169,3 @@ void loop() {
   FastLED.show();
   
 }
-
