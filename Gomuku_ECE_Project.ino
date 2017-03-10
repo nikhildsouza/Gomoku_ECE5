@@ -23,7 +23,8 @@ struct ledType{
   CRGB colour;
 };
 
-int cursor_x, cursor_y;
+
+int cursor_x, cursor_y, player = 1;;
 ledType board_colour[8][8];
 
 
@@ -61,7 +62,8 @@ int coord_to_led(int*x, int*y){
     *x = 7 - (*x);//8x8 grid is in a snake-like unidirectional form
   }
   
-  int ledno = (*y-1)*8 + *x;
+  int ledno = (*y)*8 + *x;
+  return ledno;
 }
 
 
@@ -70,15 +72,11 @@ int coord_to_led(int*x, int*y){
 CRGB draw_out(int which_player,int ledno)
 {
   
-  if(which_player==1){
+  if(which_player == -1){
     Colour = HalfRed;
   }else{
     Colour = HalfBlue;
   }
-  
-  leds[ledno] = Colour;
-  
-  FastLED.show();
 
   return Colour;
 }
@@ -89,9 +87,9 @@ CRGB draw_out(int which_player,int ledno)
 void get_input(int which_player, int*Switch, int* _x, int* _y )
 {
   
-  int x, y, x_raw, y_raw, num;
+  int x, y, x_raw, y_raw;
 
-  if(which_player == 0) {
+  if(which_player == -1) {
     x_raw = analogRead(X1_pin);
     y_raw = analogRead(Y1_pin);
     *Switch = digitalRead(SW1_pin);
@@ -109,19 +107,14 @@ void get_input(int which_player, int*Switch, int* _x, int* _y )
   else if (x_raw<300)
     x = 1;
   else
-    x =0;
+    x = 0;
 
   if(y_raw>700)
     y = -1;
   else if (y_raw <300)
     y = 1;
   else
-    y=0;
-
-  // Display cursor on the 8x8 Grid  
-  num = coord_to_led(&x, &y); // led number
-  leds[num] = HalfGreen; // cursor colour is green
-  FastLED.show();
+    y= 0;
   
   *_x = x; *_y = y;
   
@@ -132,12 +125,26 @@ void get_input(int which_player, int*Switch, int* _x, int* _y )
 // Adds all the cursor movements till the joystick is clicked
 void finalCoord(int which_player, int*a, int*b){
   
-  int x, y, Switch;
+  int x = 0, y = 0, Switch, num, c, d;
+  c = x, d = y;
+  
   do{
-    
+
+    // Display cursor on the 8x8 Grid  
+    num = coord_to_led(&c, &d); // led number
+    leds[num] = HalfGreen; // cursor colour is green
+    FastLED.show();
+    boardColour();
+  
     get_input(which_player, &Switch, &x, &y);
-    a += x;
-    b += y;
+    *a += x, *b += y; 
+    if(*a>7) *a=7;
+    if(*a<0) *a=0;
+    if(*b>7) *b=7;
+    if(*b<0) *b=0;
+    c = *a, d = *b;
+    
+    delay(50);
     
   }while(Switch != 1);
   
@@ -146,22 +153,30 @@ void finalCoord(int which_player, int*a, int*b){
 
 
 //Set the permanent colour of the led board
-void boardColour(int*x, int*y){
+void boardColour(){
+
+  for(int i = 0; i<8; i++){
+    
+    for(int j = 0; j<8; j++){
+      leds[board_colour[i][j].num] = board_colour[i][j].colour;
+    }//column using inner for loop
+    
+  }//row using outer for loop
+  
+  FastLED.show();
   
 }
 
 
 
-CRGB c;
 //execute the game once
-void getPoint(){
+void getPoint(int which_player){
 
-  int x, y, which_player, ledno;
+  int x, y, ledno;
   finalCoord(which_player, &x, &y);
   ledno = coord_to_led(&x, &y);
-  c = draw_out(which_player, ledno);
   board_colour[x][y].num = ledno;
-  board_colour[x][y].colour = c;
+  board_colour[x][y].colour = draw_out(which_player, ledno);
   
 }
 
@@ -260,19 +275,17 @@ boolean game_End(){
 
 // To repeatedly run the desired code
 void loop() {
-  
-  for(int i = 0; i<8; i++){
-    
-    for(int j = 0; j<8; j++){
-      leds[board_colour[i][j].num] = board_colour[i][j].colour;
-    }//column using inner for loop
-    
-  }//row using outer for loop
 
+  player = -1*player;
+
+  getPoint(player);
+    
   if(game_End()){
-    //display win
+    while(1){
+      //display rainbow/board
+      boardColour();
+    }
   }
   
-  FastLED.show();
   
 }
