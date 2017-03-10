@@ -90,7 +90,7 @@ CRGB draw_out(int which_player,int ledno)
 // To obtain the users' choice
 void get_input(int which_player, int*Switch, int* _x, int* _y )
 {
-  int x, y, x_raw, y_raw;
+  int x, y, x_raw, y_raw, num;
 
   if(which_player == 0) {
     x_raw = analogRead(X1_pin);
@@ -115,7 +115,12 @@ void get_input(int which_player, int*Switch, int* _x, int* _y )
     y = 1;
   else
     y=0;
-    
+
+  // Display cursor on the 8x8 Grid  
+  num = coord_to_led(&x, &y); // led number
+  leds[num] = HalfGreen; // cursor colour is green
+  FastLED.show();
+  
   //read the switch
     
   *_x = x; *_y = y;
