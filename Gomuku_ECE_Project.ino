@@ -90,6 +90,7 @@ CRGB draw_out(int which_player,int ledno)
 // To obtain the users' choice
 void get_input(int which_player, int*Switch, int* _x, int* _y )
 {
+  
   int x, y, x_raw, y_raw, num;
 
   if(which_player == 0) {
@@ -124,11 +125,14 @@ void get_input(int which_player, int*Switch, int* _x, int* _y )
   //read the switch
     
   *_x = x; *_y = y;
+  
 }
+
 
 
 // Adds all the cursor movements till the joystick is clicked
 void finalCoord(int which_player, int*a, int*b){
+  
   int x, y, Switch;
   do{
     get_input(which_player, &Switch, &x, &y);
@@ -136,6 +140,7 @@ void finalCoord(int which_player, int*a, int*b){
     b += y;
     // get input for Switch
   }while(Switch != 0);
+  
 }
 
 
@@ -144,6 +149,7 @@ void finalCoord(int which_player, int*a, int*b){
 void boardColour(int*x, int*y){
   
 }
+
 
 
 CRGB c;
@@ -156,10 +162,53 @@ void getPoint(){
   c = draw_out(which_player, ledno);
   board_colour[x][y].num = ledno;
   board_colour[x][y].colour = c;
+  
 }
 
 
 
+// Conditions to win the game!!
+boolean game_End(){
+  
+  boolean status = false;
+  int ctr_row = 0, ctr_diagonal = 0;
+  ledType temp;
+  for(int i = 1; i<8; i++){
+    
+    for(int j = 0; j<7; j++){
+      
+      if(board_colour[i-1][j].num < board_colour[i][j+1].num){
+        
+        temp = board_colour[i-1][j];
+        board_colour[i-1][j] = board_colour[i][j+1];
+        board_colour[i][j+1] = temp;
+        
+      }//if condition to put the loop in acsending order
+      
+    }//column using inner for loop
+    
+  }//row using outer for loop
+
+  for(int i = 1; i<8; i++){
+    
+    for(int j = 0; j<7; j++){
+      
+      if(board_colour[i-1][j].num = board_colour[i][j+1].num){
+        ctr_row++;
+      }
+      if(1) {
+        ctr_diagonal++;
+      }
+        
+      
+    }//column using inner for loop
+    
+  }//row using outer for loop
+
+
+  return status;
+
+}
 // To repeatedly run the desired code
 void loop() {
   
