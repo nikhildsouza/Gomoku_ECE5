@@ -193,13 +193,17 @@ boolean game_End(){
     
     for(int j = 0; j<7; j++){
       
-      if(board_colour[i-1][j].num = board_colour[i][j+1].num){
+      if(board_colour[i-1][j].num = board_colour[i-1][j+1].num){
         ctr_row++;
       }
-      if(1) {
+      if(board_colour[i-1][j].num = board_colour[i][j+1].num) {
         ctr_diagonal++;
       }
-        
+
+      if(ctr_diagonal==5 || ctr_row==5){
+        status = true;
+        return status;  
+      }
       
     }//column using inner for loop
     
@@ -209,6 +213,9 @@ boolean game_End(){
   return status;
 
 }
+
+
+
 // To repeatedly run the desired code
 void loop() {
   
@@ -220,6 +227,10 @@ void loop() {
     
   }//row using outer for loop
 
+  if(game_End()){
+    //display win
+  }
+  
   FastLED.show();
   
 }
