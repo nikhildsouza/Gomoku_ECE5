@@ -28,13 +28,31 @@ struct ledType{
 
 int cursor_x=0, cursor_y=0, player = 1;
 ledType board_colour[8][8]; // displays all colours on current board
+ledType board_colour_highlight[8][8]; // blanks out winning LED combination
 ledType player_O[8][8]; // displays P1
 ledType player_T[8][8]; // displays P2
 
 
 
+void setup(); // To setup all relevant parts
+void led_to_coord(int ledno, int*x, int*y);// Converts LED no. to coordinates
+int coord_to_led(int*x, int*y); // Converts coordinates to LED no. and returns an int
+CRGB draw_out(int which_player,int ledno); // Returns the colour of current player
+int readPlayer(int which_player); // Returns the switch choice of current player
+void get_input(int which_player, int*Switch, int* _x, int* _y ); // Initializes variables acccording to player choice
+void finalCoord(int which_player); // Obtains sum totol of cursor movevements for one turn
+void boardColour(); // Displays the current position and colour of LED
+void boardHighlightColour(); // Highlights the winning LED combination
+void  dispPO(); // Displays P1
+void  dispPT(); // Displays P2
+void getPoint(int which_player); // Obtains the position of final point and traces cursor movement
+void resetColour(); // Resets board_colour_highlight[8][8] to equal board_colour[8][8]
+boolean game_End(); // Determines conditions for succes anf returns a boolean value
+
+
+
 // To setup all relevant parts 
-void setup() {
+void setup(){
   
   FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
   
@@ -44,15 +62,15 @@ void setup() {
     
     for(int j = 0; j<8; j++){
       board_colour[i][j].num = coord_to_led(&i, &j);
+      board_colour_highlight[i][j].num = coord_to_led(&i, &j);
       player_O[i][j].num = coord_to_led(&i, &j);
       player_T[i][j].num = coord_to_led(&i, &j);
       board_colour[i][j].colour = Blank;
+      board_colour_highlight[i][j].colour = Blank;
       player_O[i][j].colour = Blank;
       player_T[i][j].colour = Blank;
     }//column using inner for loop
-    
   }//row using outer for loop
-  
   
   Serial.begin(9600);//for higher speed - 115200
 }
@@ -116,8 +134,7 @@ int readPlayer(int which_player){
 
 
 // To obtain the users' choice
-void get_input(int which_player, int*Switch, int* _x, int* _y )
-{
+void get_input(int which_player, int*Switch, int* _x, int* _y ){
   
   int x, y, x_raw, y_raw;
 
@@ -158,7 +175,7 @@ void get_input(int which_player, int*Switch, int* _x, int* _y )
 
 
 // Adds all the cursor movements till the joystick is clicked
-void finalCoord(int which_player/*, int*a, int*b*/){
+void finalCoord(int which_player){
 
   // Initialize and reset all these vaiables for change in player
   int x = 0, y = 0, Switch = 0, c = 0, d = 0; 
@@ -205,6 +222,23 @@ void boardColour(){
   else{ // if Grid is occupied by a player colour
     leds[board_colour[cursor_x][cursor_y].num] =  HalfYellow; 
   }
+  FastLED.show();
+  
+}
+
+
+
+//displays colour of the board_colour_highlight[][]
+void boardHighlightColour(){
+
+  for(int i = 0; i<8; i++){
+    
+    for(int j = 0; j<8; j++){
+      leds[board_colour_highlight[i][j].num] = board_colour_highlight[i][j].colour;
+    }//column using inner for loop
+    
+  }//row using outer for loop
+
   FastLED.show();
   
 }
@@ -262,9 +296,20 @@ void getPoint(int which_player){
   int x, y, ledno;
   finalCoord(which_player/*, &x, &y*/); // obtains final coordinate of each player's turn
   board_colour[cursor_x][cursor_y].colour = draw_out(which_player, board_colour[cursor_x][cursor_y].num); //assigns colour based on player
+  board_colour_highlight[cursor_x][cursor_y].colour = board_colour[cursor_x][cursor_y].colour;
   
 }
 
+
+
+//Resets the colours of board_colour_highlight[][]
+void resetColour(){
+  for(int i = 0; i<8; i++){
+    for(int j = 0; j<8; j++){
+      board_colour_highlight[i][j].colour = board_colour[i][j].colour;
+    }
+  }
+}
 
 
 // Conditions to win the game!!
@@ -281,8 +326,13 @@ boolean game_End(){
       
       if(board_colour[i-1][j].colour == board_colour[i-1][j+1].colour && board_colour[i-1][j+1].colour != Blank){
         ctr_row++;
+        board_colour_highlight[i-1][j].colour = Blank;
+        board_colour_highlight[i-1][j+1].colour = Blank;
       }
-      else ctr_row = 0;
+      else{
+        ctr_row = 0;
+        resetColour();
+      }
       
       if(ctr_row == 4){
         status = true;
@@ -294,13 +344,18 @@ boolean game_End(){
   }//row using outer for loop
 
   //CHECKING Column WIN CONDITION 
-  for(int j = 0; j<7; j++){
+  for(int j = 0; j<7; j++){ //invert j and i counters
      for (int i = 0; i < 9; i++){
       
         if(board_colour[i-1][j].colour == board_colour[i-1][j+1].colour && board_colour[i-1][j+1].colour != Blank){
           ctr_column++;
+          board_colour_highlight[i-1][j].colour = Blank;
+          board_colour_highlight[i-1][j+1].colour = Blank;
         }
-        else ctr_column = 0;
+        else{
+          ctr_column = 0;
+          resetColour();
+        }
         
         if(ctr_column == 4){
           status = true;
@@ -318,8 +373,13 @@ boolean game_End(){
   
       if(board_colour[temp_i][j].colour == board_colour[temp_i+1][j+1].colour && board_colour[temp_i+1][j+1].colour != Blank) {
         ctr_diagonal++;
+        board_colour_highlight[temp_i][j].colour = Blank;
+        board_colour_highlight[temp_i+1][j+1].colour = Blank;
       }
-      else ctr_diagonal = 0;
+      else{
+        ctr_diagonal = 0;
+        resetColour();
+      }
 
       if(ctr_diagonal == 4){
         status = true;
@@ -340,8 +400,13 @@ boolean game_End(){
   
       if(board_colour[i][temp_j].colour == board_colour[i+1][temp_j+1].colour && board_colour[i+1][temp_j+1].colour != Blank) {
         ctr_diagonal++;
+        board_colour_highlight[i][temp_j].colour = Blank;
+        board_colour_highlight[i+1][temp_j+1].colour = Blank;
       }
-      else ctr_diagonal = 0;
+      else{
+        ctr_diagonal = 0;
+        resetColour();
+      }
 
       if(ctr_diagonal == 4){
         status = true;
@@ -362,8 +427,13 @@ boolean game_End(){
   
       if(board_colour[temp_i][j].colour == board_colour[temp_i+1][j-1].colour && board_colour[temp_i][j].colour != Blank) {
         ctr_diagonal++;
+        board_colour_highlight[temp_i][j].colour = Blank;
+        board_colour_highlight[temp_i+1][j-1].colour = Blank;
       }
-      else ctr_diagonal = 0;
+      else{
+        ctr_diagonal = 0;
+        resetColour();
+      }
 
       if(ctr_diagonal == 4){
         status = true;
@@ -384,8 +454,13 @@ boolean game_End(){
   
       if(board_colour[i][temp_j].colour == board_colour[i+1][temp_j-1].colour && board_colour[i][temp_j].colour != Blank) {
         ctr_diagonal++;
+        board_colour_highlight[i][temp_j].colour = Blank;
+        board_colour_highlight[i+1][temp_j-1].colour = Blank;
       }
-      else ctr_diagonal = 0;
+      else{
+        ctr_diagonal = 0;
+        resetColour();
+      }
 
       if(ctr_diagonal == 4){
         status = true;
@@ -423,8 +498,11 @@ void loop() {
       }
       FastLED.show();
       delay(200);
+      
       for(int i = 0; i<3; i++){
         boardColour();
+        delay(200); 
+        boardHighlightColour();
         delay(200); 
       }
       
@@ -443,5 +521,6 @@ void loop() {
       Switch = readPlayer(player);
     }while(Switch != 0);//do-while loop
   }//if
-    
+  
+  
 }
