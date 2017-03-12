@@ -5,11 +5,12 @@
 
 CRGB leds[NUM_LEDS];
 
-const CRGB HalfRed = {100,0,0};
-const CRGB HalfBlue = {0,0,100};
-const CRGB HalfGreen = {30,100,30};
-const CRGB Blank = {0,0,0};
-CRGB Colour;
+const CRGB HalfRed = {100,0,0};      //half the intesity of red
+const CRGB HalfBlue = {0,0,100};     //half the intesity of Blue
+const CRGB HalfGreen = {30,100,30};  //half the intesity of Green
+const CRGB HalfYellow = {100,100,0}; //half the intesity of Yellow
+const CRGB Blank = {0,0,0};          //Black or no colour
+CRGB Colour; // Keeps track of current colour - global variable
 
 const int SW1_pin = A4; // digital pin connected to SW
 const int X1_pin = A0; // analog pin connected to VRx
@@ -26,9 +27,9 @@ struct ledType{
 
 
 int cursor_x=0, cursor_y=0, player = 1;
-ledType board_colour[8][8];
-ledType player_O[8][8];
-ledType player_T[8][8];
+ledType board_colour[8][8]; // displays all colours on current board
+ledType player_O[8][8]; // displays P1
+ledType player_T[8][8]; // displays P2
 
 
 
@@ -37,11 +38,8 @@ void setup() {
   
   FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
   
-  pinMode(SW1_pin, INPUT);
-  
-  pinMode(SW2_pin, INPUT);
-  
-
+  //initialize all the respective LED numbers of 8x8 Grid from 0 to 63
+  //initialize all the colours for these 64 LEDs to be Blank/black
   for(int i = 0; i<8; i++){
     
     for(int j = 0; j<8; j++){
@@ -60,6 +58,7 @@ void setup() {
 
   
   /*
+  // Test case - displays a rainbow spectrum
   for(int i = 0; i<64; i++)
   {
     leds[i] = CHSV(i*3,240,100);
@@ -95,7 +94,7 @@ int coord_to_led(int*x, int*y){
 
 
 
-// To display the correct LED choice
+// To display the correct colour of LED for a choice of player
 CRGB draw_out(int which_player,int ledno)
 {
   
@@ -128,14 +127,17 @@ void get_input(int which_player, int*Switch, int* _x, int* _y )
   }
   //analogRead returns a range from 0 to 1023
   //500 is midpoint where nothing is done to joystick
-  
+  //0 is returned when the switch is pressed
+
+  //arbitrary axis for x-value
   if(x_raw>700)
-    x = -1;
-  else if (x_raw<300)
     x = 1;
+  else if (x_raw<300)
+    x = -1;
   else
     x = 0;
 
+  //arbitrary axis for y-value
   if(y_raw>700)
     y = -1;
   else if (y_raw <300)
@@ -151,31 +153,36 @@ void get_input(int which_player, int*Switch, int* _x, int* _y )
 
 // Adds all the cursor movements till the joystick is clicked
 void finalCoord(int which_player/*, int*a, int*b*/){
-  
-  int x = 0, y = 0, Switch=0, c=0, d=0;
-      cursor_x = 0;
-    cursor_y = 0;
+
+  // Initialize and reset all these vaiables for change in player
+  int x = 0, y = 0, Switch = 0, c = 0, d = 0; 
+
+  // Reset all these vaiables for change in player
+  cursor_x = 0, cursor_y = 0;
   
   do{
     
-    // Display cursor on the 8x8 Grid  
-
+    // Displays cursor on the 8x8 Grid  
+    // Displays all the set point of Red and Blue
     boardColour();
   
-    get_input(which_player, &Switch, &x, &y);
+    get_input(which_player, &Switch, &x, &y); // obtains input
     /**a += x, *b += y; 
     if(*a>7) *a=7;
     if(*a<0) *a=0;
     if(*b>7) *b=7;
     if(*b<0) *b=0;
     c = *a, d = *b;*/
-    cursor_x += x, cursor_y += y; 
-    if(cursor_x>7) cursor_x=7;
+    cursor_x += x, cursor_y += y; //sum total movements for each player's turn
+    // Setting upper and lower boundaries to prevent out of bound acces of 8x8 Grid
+    if(cursor_x>7) cursor_x=7; 
     if(cursor_x<0) cursor_x=0;
     if(cursor_y>7) cursor_y=7;
     if(cursor_y<0) cursor_y=0;
-    delay(200);
-  }while(Switch != 0);
+    
+    delay(200);// to provide a good response time for the player
+    
+  }while((Switch != 0) && (board_colour[cursor_x][cursor_y].colour != HalfRed) && (board_colour[cursor_x][cursor_y].colour != HalfBlue));
   
 }
 
@@ -191,7 +198,13 @@ void boardColour(){
     }//column using inner for loop
     
   }//row using outer for loop
-  leds[board_colour[cursor_x][cursor_y].num] = HalfGreen;
+
+  if( board_colour[cursor_x][cursor_y].colour == Blank){
+    leds[board_colour[cursor_x][cursor_y].num] = HalfGreen;
+  }
+  else{ // if Grid is occupied by a player colour
+    leds[board_colour[cursor_x][cursor_y].num] =  HalfYellow; 
+  }
   FastLED.show();
   
 }
@@ -202,10 +215,10 @@ void boardColour(){
 void getPoint(int which_player){
 
   int x, y, ledno;
-  finalCoord(which_player/*, &x, &y*/);
+  finalCoord(which_player/*, &x, &y*/); // obtains final coordinate of each player's turn
   //ledno = coord_to_led(&x, &y);
   //board_colour[x][y].num = ledno;
-  board_colour[cursor_x][cursor_y].colour = draw_out(which_player, board_colour[cursor_x][cursor_y].num);
+  board_colour[cursor_x][cursor_y].colour = draw_out(which_player, board_colour[cursor_x][cursor_y].num); //assigns colour based on player
   
 }
 
@@ -218,6 +231,7 @@ boolean game_End(){
   int ctr_row = 0, ctr_diagonal = 0, ctr_column = 0;
   ledType temp;
   /*
+  //Sorting of the Array board_colour[][] in acscending order of num values
   for(int i = 1; i<8; i++){
     
     for(int j = 0; j<7; j++){
