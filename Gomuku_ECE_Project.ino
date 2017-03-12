@@ -98,6 +98,23 @@ CRGB draw_out(int which_player,int ledno)
 
 
 
+//Sets switch value depending on which player
+int readPlayer(int which_player){
+
+  int Switch;
+  if(which_player == -1) {
+    Switch = analogRead(SW1_pin);
+  }
+  else {
+    Switch = analogRead(SW2_pin);
+  }
+
+  return Switch;
+  
+}
+
+
+
 // To obtain the users' choice
 void get_input(int which_player, int*Switch, int* _x, int* _y )
 {
@@ -190,6 +207,51 @@ void boardColour(){
   }
   FastLED.show();
   
+}
+
+
+
+//Display P1 for player 1 winning
+void  dispPO(){
+  for(int i = 1; i<7;i++){
+    player_O[i][1].colour = HalfRed;
+    player_O[i][5].colour = HalfRed;
+    if(i>3) player_O[i][3].colour = HalfRed;
+  }
+  player_O[6][2].colour = HalfRed;
+  player_O[4][2].colour = HalfRed;
+
+  for(int i = 0; i<8; i++){
+    
+    for(int j = 0; j<8; j++){
+      leds[player_O[i][j].num] = player_O[i][j].colour;
+    }//column using inner for loop
+    
+  }//row using outer for loop
+  FastLED.show();
+}
+
+
+
+//Display P2 for player 2 winning
+void  dispPT(){
+  for(int i = 2; i<8;i++){
+    player_O[i][0].colour = HalfBlue;
+    if(i>0 && i<4)player_O[i][4].colour = HalfBlue;
+    if(i>2 && i<6)player_O[i][7].colour = HalfBlue;
+    if(i>4) player_O[i][2].colour = HalfBlue;
+  }
+  player_O[7][1].colour = HalfBlue;
+  player_O[5][1].colour = HalfBlue;
+  
+  for(int i = 0; i<8; i++){
+    
+    for(int j = 0; j<8; j++){
+      leds[player_T[i][j].num] = player_T[i][j].colour;
+    }//column using inner for loop
+    
+  }//row using outer for loop
+  FastLED.show();
 }
 
 
@@ -348,18 +410,38 @@ void loop() {
   player = -1*player;
   
   getPoint(player);
+
+  int Switch;
     
   if(game_End()){
     
-    while(1){
+    do{
       for(int i = 0; i<64; i++){
         
         leds[i] = CHSV(i*3,240,100);
         
       }
       FastLED.show();
-    }
-  }
-  
-  
+      delay(200);
+      for(int i = 0; i<3; i++){
+        boardColour();
+        delay(200); 
+      }
+      
+      for(int i = 0; i<3; i++){
+        if(player == -1){
+           dispPO();
+        }
+        else{
+          dispPT();
+        }
+        delay(200);
+      }
+      
+      delay(300);
+      
+      Switch = readPlayer(player);
+    }while(Switch != 0);//do-while loop
+  }//if
+    
 }
