@@ -55,17 +55,6 @@ void setup() {
   
   
   Serial.begin(9600);//for higher speed - 115200
-
-  
-  /*
-  // Test case - displays a rainbow spectrum
-  for(int i = 0; i<64; i++)
-  {
-    leds[i] = CHSV(i*3,240,100);
-  }
-  FastLED.show();
-  while(1);
-  */
 }
 
 
@@ -167,12 +156,6 @@ void finalCoord(int which_player/*, int*a, int*b*/){
     boardColour();
   
     get_input(which_player, &Switch, &x, &y); // obtains input
-    /**a += x, *b += y; 
-    if(*a>7) *a=7;
-    if(*a<0) *a=0;
-    if(*b>7) *b=7;
-    if(*b<0) *b=0;
-    c = *a, d = *b;*/
     cursor_x += x, cursor_y += y; //sum total movements for each player's turn
     // Setting upper and lower boundaries to prevent out of bound acces of 8x8 Grid
     if(cursor_x>7) cursor_x=7; 
@@ -216,8 +199,6 @@ void getPoint(int which_player){
 
   int x, y, ledno;
   finalCoord(which_player/*, &x, &y*/); // obtains final coordinate of each player's turn
-  //ledno = coord_to_led(&x, &y);
-  //board_colour[x][y].num = ledno;
   board_colour[cursor_x][cursor_y].colour = draw_out(which_player, board_colour[cursor_x][cursor_y].num); //assigns colour based on player
   
 }
@@ -230,23 +211,6 @@ boolean game_End(){
   boolean status = false;
   int ctr_row = 0, ctr_diagonal = 0, ctr_column = 0;
   ledType temp;
-  /*
-  //Sorting of the Array board_colour[][] in acscending order of num values
-  for(int i = 1; i<8; i++){
-    
-    for(int j = 0; j<7; j++){
-      
-      if(board_colour[i-1][j].num < board_colour[i][j+1].num){
-        
-        temp = board_colour[i-1][j];
-        board_colour[i-1][j] = board_colour[i][j+1];
-        board_colour[i][j+1] = temp;
-        
-      }//if condition to put the loop in acsending order
-      
-    }//column using inner for loop
-    
-  }//row using outer for loop*/
 
   //CHECKING ROW WIN CONDITION
   for(int i = 1; i<9; i++){//CHECKING ROW WIN CONDITION
@@ -267,8 +231,6 @@ boolean game_End(){
     
   }//row using outer for loop
 
-
-
   //CHECKING Column WIN CONDITION 
   for(int j = 0; j<7; j++){
      for (int i = 0; i < 9; i++){
@@ -285,7 +247,6 @@ boolean game_End(){
       
     }//column using inner for loop
   }
-
 
   //CHECKING FORWARD DIAGONAL WIN CONDITION FOR +VE
   for(int i = 0; i<4; i++){
@@ -309,7 +270,6 @@ boolean game_End(){
      
   }//row using outer for loop
 
-
   //CHECKING FORWARD DIAGONAL WIN CONDITION FOR -VE
   for(int j = 0; j<4; j++){
  
@@ -332,8 +292,6 @@ boolean game_End(){
      
   }//row using outer for loop
 
-
-
   //CHECKING NEGATIVE DIAGONAL WIN CONDITION FOR +VE
   for(int i = 0; i<4; i++){
  
@@ -355,7 +313,6 @@ boolean game_End(){
     }while(temp_i<7);    
      
   }//row using outer for loop
-
 
    //CHECKING NEGATIVE DIAGONAL WIN CONDITION FOR -VE
   for(int j = 0; j<4; j++){
