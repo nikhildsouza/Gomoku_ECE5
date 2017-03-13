@@ -26,7 +26,8 @@ struct ledType{
 };
 
 
-int cursor_x=0, cursor_y=0, player = 1;
+int cursor_x = 0, cursor_y = 0, player = 1;
+int cursor_x_red = 0, cursor_y_red = 0,  cursor_x_blue = 0, cursor_y_blue = 0;
 ledType board_colour[8][8]; // displays all colours on current board
 ledType board_colour_highlight[8][8]; // blanks out winning LED combination
 ledType player_O[8][8]; // displays P1
@@ -180,8 +181,15 @@ void finalCoord(int which_player){
   // Initialize and reset all these vaiables for change in player
   int x = 0, y = 0, Switch = 0, c = 0, d = 0; 
 
-  // Reset all these vaiables for change in player
-  cursor_x = 0, cursor_y = 0;
+  if(which_player == -1){
+    // Reset all these vaiables for player 1
+    cursor_x = cursor_x_red, cursor_y = cursor_y_red;
+  }
+  else{
+    // Reset all these vaiables for player 2
+    cursor_x = cursor_x_blue, cursor_y = cursor_y_blue;
+  }
+  
   
   do{
     
@@ -196,7 +204,16 @@ void finalCoord(int which_player){
     if(cursor_x<0) cursor_x=0;
     if(cursor_y>7) cursor_y=7;
     if(cursor_y<0) cursor_y=0;
-    
+
+    // To restart each player from their last chosen spot
+    if(which_player == -1){
+      // Keeps track of last move of player 1
+      cursor_x_red = cursor_x, cursor_y_red = cursor_y ;
+    }
+    else{
+      // Keeps track of last move of player 2
+      cursor_x_blue = cursor_x, cursor_y_blue = cursor_y;
+    }
     delay(200);// to provide a good response time for the player
     
   }while((Switch != 0) && (board_colour[cursor_x][cursor_y].colour != HalfRed) && (board_colour[cursor_x][cursor_y].colour != HalfBlue));
@@ -310,6 +327,7 @@ void resetColour(){
     }
   }
 }
+
 
 
 // Conditions to win the game!!
@@ -521,6 +539,5 @@ void loop() {
       Switch = readPlayer(player);
     }while(Switch != 0);//do-while loop
   }//if
-  
   
 }
