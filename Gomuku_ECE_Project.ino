@@ -26,6 +26,7 @@ struct ledType{
 };
 
 int8_t cursor_x = 0, cursor_y = 0, player = 1;
+int8_t cursor_x_red = 0, cursor_y_red = 0,  cursor_x_blue = 0, cursor_y_blue = 0;
 ledType board_colour[8][8]; // displays all colours on current board
 ledType board_colour_highlight[8][8]; // blanks out winning LED combination
 ledType player_O[8][8]; // displays P1
@@ -38,7 +39,7 @@ void setup(); // To setup all relevant parts
 void led_to_coord(int8_t ledno, int8_t*x, int8_t*y);// Converts LED no. to coordinates
 int8_t coord_to_led(int8_t*x, int8_t*y); // Converts coordinates to LED no. and returns an int
 CRGB draw_out(int8_t which_player,int8_t ledno); // Returns the colour of current player
-int8_t readPlayer(int8_t which_player); // Returns the switch choice of current player
+int readPlayer(int8_t which_player); // Returns the switch choice of current player
 void get_input(int8_t which_player, int*Switch, int8_t* _x, int8_t* _y ); // Initializes variables acccording to player choice
 void finalCoord(int8_t which_player); // Obtains sum totol of cursor movevements for one turn
 void boardColour(); // Displays the current position and colour of LED
@@ -119,37 +120,37 @@ CRGB draw_out(int8_t which_player,int8_t ledno)
 
 
 //Sets switch value depending on which player
-int8_t readPlayer(int8_t which_player){
+int readPlayer(int8_t which_player){
 
-  int Switch;
+  int Exit_switch;
   if(which_player == -1) {
-    Switch = analogRead(SW1_pin);
+    Exit_switch = analogRead(SW1_pin);
   }
   else {
-    Switch = analogRead(SW2_pin);
+    Exit_switch = analogRead(SW2_pin);
   }
 
-  return Switch;
+  return Exit_switch;
   
 }
 
 
 
 // To obtain the users' choice
-void get_input(int8_t which_player, int*Switch, int8_t* _x, int8_t* _y ){
+int get_input(int8_t which_player, int8_t* _x, int8_t* _y ){
   
   int8_t x, y;
-  int x_raw, y_raw;
+  int x_raw, y_raw, Switch;
 
   if(which_player == -1) {
     x_raw = analogRead(X1_pin);
     y_raw = analogRead(Y1_pin);
-    *Switch = analogRead(SW1_pin);
+    Switch = analogRead(SW1_pin);
   }
   else {
     x_raw = analogRead(X2_pin);
     y_raw = analogRead(Y2_pin);
-    *Switch = analogRead(SW2_pin);
+    Switch = analogRead(SW2_pin);
   }
   //analogRead returns a range from 0 to 1023
   //500 is midpoint where nothing is done to joystick
@@ -172,13 +173,14 @@ void get_input(int8_t which_player, int*Switch, int8_t* _x, int8_t* _y ){
     y= 0;
   
   *_x = x; *_y = y;
+  return Switch;
   
 }
 
 
 
 // Adds all the cursor movements till the joystick is clicked
-void finalCoord(int8_t which_player, int8_t*cursor_x_red, int8_t*cursor_y_red, int8_t*cursor_x_blue, int8_t*cursor_y_blue){
+void finalCoord(int8_t which_player){
 
   // Initialize and reset all these vaiables for change in player
   int8_t x = 0, y = 0,  c = 0, d = 0; 
@@ -186,11 +188,11 @@ void finalCoord(int8_t which_player, int8_t*cursor_x_red, int8_t*cursor_y_red, i
 
   if(which_player == -1){
     // Reset all these vaiables for player 1
-    cursor_x = *cursor_x_red, cursor_y = *cursor_y_red;
+    cursor_x = cursor_x_red, cursor_y = cursor_y_red;
   }
   else{
     // Reset all these vaiables for player 2
-    cursor_x = *cursor_x_blue, cursor_y = *cursor_y_blue;
+    cursor_x = cursor_x_blue, cursor_y = cursor_y_blue;
   }
   
   
@@ -200,7 +202,7 @@ void finalCoord(int8_t which_player, int8_t*cursor_x_red, int8_t*cursor_y_red, i
     // Displays all the set point of Red and Blue
     boardColour();
   
-    get_input(which_player, &Switch, &x, &y); // obtains input
+    Switch = get_input(which_player, &x, &y); // obtains input
     cursor_x += x, cursor_y += y; //sum total movements for each player's turn
     // Setting upper and lower boundaries to prevent out of bound acces of 8x8 Grid
     if(cursor_x>7) cursor_x=7; 
@@ -211,15 +213,15 @@ void finalCoord(int8_t which_player, int8_t*cursor_x_red, int8_t*cursor_y_red, i
     // To restart each player from their last chosen spot
     if(which_player == -1){
       // Keeps track of last move of player 1
-      *cursor_x_red = cursor_x, *cursor_y_red = cursor_y ;
+      cursor_x_red = cursor_x, cursor_y_red = cursor_y ;
     }
     else{
       // Keeps track of last move of player 2
-      *cursor_x_blue = cursor_x, *cursor_y_blue = cursor_y;
+      cursor_x_blue = cursor_x, cursor_y_blue = cursor_y;
     }
     delay(200);// to provide a good response time for the player
     
-  }while((Switch != 0) && (board_colour[cursor_x][cursor_y].colour != HalfRed) && (board_colour[cursor_x][cursor_y].colour != HalfBlue));
+  }while(!((board_colour[cursor_x][cursor_y].colour != HalfRed) && (board_colour[cursor_x][cursor_y].colour != HalfBlue) && (Switch == 0)));
   
 }
 
@@ -268,12 +270,12 @@ void boardHighlightColour(){
 //Display P1 for player 1 winning
 void  dispPO(){
   for(int8_t i = 1; i<7;i++){
-    player_O[i][1].colour = HalfRed;
-    player_O[i][5].colour = HalfRed;
-    if(i>3) player_O[i][3].colour = HalfRed;
+    player_O[1][i].colour = HalfRed;
+    player_O[5][i].colour = HalfRed;
+    if(i>3) player_O[3][i].colour = HalfRed;
   }
-  player_O[6][2].colour = HalfRed;
-  player_O[4][2].colour = HalfRed;
+  player_O[2][6].colour = HalfRed;
+  player_O[2][4].colour = HalfRed;
 
   for(int8_t i = 0; i<8; i++){
     
@@ -290,13 +292,13 @@ void  dispPO(){
 //Display P2 for player 2 winning
 void  dispPT(){
   for(int8_t i = 2; i<8;i++){
-    player_O[i][0].colour = HalfBlue;
-    if(i>0 && i<4)player_O[i][4].colour = HalfBlue;
-    if(i>2 && i<6)player_O[i][7].colour = HalfBlue;
-    if(i>4) player_O[i][2].colour = HalfBlue;
+    player_O[0][i].colour = HalfBlue;
+    if(i>0 && i<4)player_O[4][i].colour = HalfBlue;
+    if(i>2 && i<6)player_O[7][i].colour = HalfBlue;
+    if(i>4) player_O[2][i].colour = HalfBlue;
   }
-  player_O[7][1].colour = HalfBlue;
-  player_O[5][1].colour = HalfBlue;
+  player_O[1][7].colour = HalfBlue;
+  player_O[1][5].colour = HalfBlue;
   
   for(int8_t i = 0; i<8; i++){
     
@@ -316,7 +318,7 @@ void  dispRainbow(){
   for(int8_t i = 0; i<8; i++){ 
     
     for(int8_t j = 0; j<8; j++){
-      rainbow[i][j].colour = CHSV(j*3,240,100);
+      rainbow[i][j].colour = CRGB{i*4,abs(128-i*16)%128,abs(252-i*6)%128};
     }//column using inner for loop
     
   }//row using outer for loop
@@ -324,7 +326,7 @@ void  dispRainbow(){
   for(int8_t i = 0; i<8; i++){
    
     for(int8_t j = 0; j<8; j++){
-      leds[player_T[i][j].num] = player_T[i][j].colour;
+      leds[rainbow[i][j].num] = rainbow[i][j].colour;
     }//column using inner for loop
     
   }//row using outer for loop
@@ -334,9 +336,9 @@ void  dispRainbow(){
 
 
 //execute the game once
-void getPoint(int8_t which_player, int8_t*cursor_x_red, int8_t*cursor_y_red, int8_t*cursor_x_blue, int8_t*cursor_y_blue){
+void getPoint(int8_t which_player){
 
-  finalCoord(which_player, cursor_x_red, cursor_y_red, cursor_x_blue, cursor_y_blue); // obtains final coordinate of each player's turn
+  finalCoord(which_player); // obtains final coordinate of each player's turn
   board_colour[cursor_x][cursor_y].colour = draw_out(which_player, board_colour[cursor_x][cursor_y].num); //assigns colour based on player
   board_colour_highlight[cursor_x][cursor_y].colour = board_colour[cursor_x][cursor_y].colour;
   
@@ -387,13 +389,13 @@ boolean game_End(){
   }//row using outer for loop
 
   //CHECKING Column WIN CONDITION 
-  for(int8_t j = 0; j<7; j++){ //invert j and i counters
-     for (int8_t i = 0; i < 9; i++){
+  for (int8_t i = 1; i < 9; i++){ //invert j and i counters
+     for(int8_t j = 0; j<7; j++){
       
-        if(board_colour[i-1][j].colour == board_colour[i-1][j+1].colour && board_colour[i-1][j+1].colour != Blank){
+        if(board_colour[j][i-1].colour == board_colour[j+1][i-1].colour && board_colour[j+1][i-1].colour != Blank){
           ctr_column++;
-          board_colour_highlight[i-1][j].colour = Blank;
-          board_colour_highlight[i-1][j+1].colour = Blank;
+          board_colour_highlight[j][i-1].colour = Blank;
+          board_colour_highlight[j+1][i-1].colour = Blank;
         }
         else{
           ctr_column = 0;
@@ -490,7 +492,7 @@ boolean game_End(){
   }//row using outer for loop
 
    //CHECKING NEGATIVE DIAGONAL WIN CONDITION FOR -VE
-  for(int8_t j = 0; j<4; j++){
+  for(int8_t j = 7; j>3; j++){
  
     int8_t i = 7, temp_j = j;
     do{
@@ -523,38 +525,44 @@ boolean game_End(){
 
 
 // To repeatedly run the desired code
-void loop( int8_t*cursor_x_red, int8_t*cursor_y_red, int8_t*cursor_x_blue, int8_t*cursor_y_blue) {
+void loop() {
 
   player = -1*player;
   
-  getPoint(player, cursor_x_red, cursor_y_red, cursor_x_blue, cursor_y_blue);
+  getPoint(player);
 
-  int Switch;
+  int Exit_switch;
     
   if(game_End()){
     
     do{
-
-      for(int8_t h = 0; h<25; h++){
-        
-        for(int8_t i = 7; i>0; i--){
-          for(int8_t j = 0; j<8; j++){
-            rainbow[i-1][j].colour = rainbow[i][j].colour;
-            if(i == 7) rainbow[7][j].colour = rainbow[0][j].colour;
-          }
-        }
   
-        for(int8_t i = 0; i<8; i++){
-          for(int8_t j = 0; j<8; j++){
-            leds[player_T[i][j].num] = player_T[i][j].colour;
-          }//column using inner for loop
-        }//row using outer for 
-      
-        FastLED.show();
-        delay(50);
+        for(int8_t h = 0; h<25; h++){
+                  
+          for(int8_t i = 0; i<8; i++){ 
+            
+            for(int8_t j = 0; j<8; j++){
+              rainbow[i][j].colour = CRGB{i*4,abs(128-i*16)%128,abs(252-i*6)%128};
+            }//column using inner for loop
+            
+          }//row using outer for loop
+
+        
+          dispRainbow();
+          delay(200);
+          
+          for(int8_t i = 7; i>0; i--){
+            for(int8_t j = 0; j<8; j++){
+              if(i == 7) rainbow[j][0].colour = rainbow[j][7].colour;
+              rainbow[j][i].colour = rainbow[j][i-1].colour;
+            }
+          }
+  
+        dispRainbow();
+        delay(200);
       }
       
-      for(int8_t i = 0; i<3; i++){
+      for(int8_t i = 0; i<5; i++){
         boardColour();
         delay(200); 
         boardHighlightColour();
@@ -569,25 +577,16 @@ void loop( int8_t*cursor_x_red, int8_t*cursor_y_red, int8_t*cursor_x_blue, int8_
           dispPT();
         }
         delay(200);
+        for(int8_t i = 0; i<64; i++){
+          leds[i] = Blank;
+        }//column using inner for loop
+        FastLED.show();
+        delay(200);
       }
       
-      delay(300);
-      
-      Switch = readPlayer(player);
-    }while(Switch != 0);//do-while loop
+      Exit_switch = readPlayer(player);
+    }while((Exit_switch != 0));//do-while loop
   }//if
   
 }
 
-
-
-int main(void){
-  
-  int8_t cursor_x_red = 0, cursor_y_red = 0,  cursor_x_blue = 0, cursor_y_blue = 0;
-  
-  init();
-
-  setup();
-
-  for(;;) loop(&cursor_x_red, &cursor_y_red, &cursor_x_blue, &cursor_y_blue);
-}
