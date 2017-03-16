@@ -31,7 +31,6 @@ ledType board_colour[8][8]; // displays all colours on current board
 ledType board_colour_highlight[8][8]; // blanks out winning LED combination
 ledType player_O[8][8]; // displays P1
 ledType player_T[8][8]; // displays P2
-ledType rainbow[8][8];  // displays a rainbow spectrum across board
 ledType rainbow_storage[8][8];// displays a temporary rainbow spectrum across board
 
 
@@ -67,12 +66,10 @@ void setup() {
       board_colour_highlight[i][j].num = coord_to_led(&i, &j);
       player_O[i][j].num = coord_to_led(&i, &j);
       player_T[i][j].num = coord_to_led(&i, &j);
-      rainbow[i][j].num = coord_to_led(&i, &j);
       board_colour[i][j].colour = Blank;
       board_colour_highlight[i][j].colour = Blank;
       player_O[i][j].colour = Blank;
       player_T[i][j].colour = Blank;
-      rainbow[i][j].colour = Blank;
     }//column using inner for loop
   }//row using outer for loop
 
@@ -329,32 +326,6 @@ void  dispPT() {
 
 
 
-//Display a rainbow spectrum accross the 64 LEDs
-void  dispRainbow() {
-  /*
-  int b = 64;
-
-  for (uint8_t i = 0; i < 8; i++) {
-
-    for (uint8_t j = 0; j < 8; j++) {
-      rainbow[i][j].colour = CRGB{i * 8 + 7, j * 8 + 2, (b--) / 2};
-    }//column using inner for loop
-
-  }//row using outer for loop
-  */
-
-  for (int8_t i = 0; i < 8; i++) {
-
-    for (int8_t j = 0; j < 8; j++) {
-      leds[rainbow[i][j].num] = rainbow[i][j].colour;
-    }//column using inner for loop
-
-  }//row using outer for loop
-  FastLED.show();
-}
-
-
-
 //execute the game once
 void getPoint(int8_t which_player) {
 
@@ -545,12 +516,21 @@ boolean game_End() {
 
 
 //To check fro draw condition
-boolean gameDraw(){
-}
+//boolean gameDraw(){
+//}
 // To repeatedly run the desired code
 void loop() {
 
   player = -1 * player;
+
+  ledType rainbow[8][8];  // displays a rainbow spectrum across board
+
+  for (int8_t i = 0; i < 8; i++) {
+    for (int8_t j = 0; j < 8; j++) {
+      rainbow[i][j].num = coord_to_led(&i, &j);
+      rainbow[i][j].colour = Blank;
+    }//column using inner for loop
+  }//row using outer for loop
 
   getPoint(player);
 
@@ -560,16 +540,26 @@ void loop() {
 
     do {
 
+      //Displays a moving wave of rainbow spectrum 
       for (int h = 0; h < 25; h++) {
+
+        //shifts only the columns of rainbow_storage[][] by one to the right
         for (int8_t i = 0; i < 8 ; i++) {
           for (int8_t j = 0; j < 8; j++) {
-            rainbow[i][j].colour = rainbow_storage[7-(i+h)%8][j].colour;
+            rainbow[i][j].colour = rainbow_storage[7 - (i + h) % 8][j].colour;
           }
         }
-        dispRainbow();
+
+        //diplays new shifted rainbow
+        for (int8_t i = 0; i < 8; i++) {
+          for (int8_t j = 0; j < 8; j++) {
+            leds[rainbow[i][j].num] = rainbow[i][j].colour;
+          }//column using inner for loop
+        }//row using outer for loop
+        FastLED.show();
         delay(200);
       }
-      
+
       for (int8_t i = 0; i < 5; i++) {
         boardColour();
         delay(200);
@@ -585,9 +575,10 @@ void loop() {
           dispPT();
         }
         delay(200);
-        for (int8_t i = 0; i < 64; i++)
-          leds[i] = Blank;
 
+        for (int8_t i = 0; i < 64; i++) {
+          leds[i] = Blank;
+        }
         FastLED.show();
         delay(200);
       }
@@ -595,8 +586,9 @@ void loop() {
       Exit_switch = readPlayer(player);
     } while ((Exit_switch != 0)); //do-while loop
   }//if
-  if(gameDraw()){
-    
-  }
+
+  //if(gameDraw()){
+
+  //}
 }
 
