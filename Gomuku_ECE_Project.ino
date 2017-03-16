@@ -516,8 +516,19 @@ boolean game_End() {
 
 
 //To check fro draw condition
-//boolean gameDraw(){
-//}
+boolean gameDraw(){
+  boolean flag = false;
+  int ctr = 0;
+  for(int8_t i = 0; i < 8; i++){
+    for (int8_t j = 0; j < 8; j++) {
+      if((board_colour[i][j].colour != Blank) && (board_colour[i][j].colour!= HalfGreen)){
+        ctr++;
+      }
+    }
+  }
+  if(ctr==64) flag = true;
+  return flag;
+}
 // To repeatedly run the desired code
 void loop() {
 
@@ -587,8 +598,12 @@ void loop() {
     } while ((Exit_switch != 0)); //do-while loop
   }//if
 
-  //if(gameDraw()){
-
-  //}
+  if(gameDraw()){
+    for(int8_t i = 0; i<64; i++){
+      leds[i] = HalfYellow; 
+    }
+    FastLED.show();
+    delay(3000);
+  }
 }
 
