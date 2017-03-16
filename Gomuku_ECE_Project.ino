@@ -32,6 +32,7 @@ ledType board_colour_highlight[8][8]; // blanks out winning LED combination
 ledType player_O[8][8]; // displays P1
 ledType player_T[8][8]; // displays P2
 ledType rainbow[8][8];  // displays a rainbow spectrum across board
+ledType rainbow_storage[8][8];// displays a temporary rainbow spectrum across board
 
 
 
@@ -73,6 +74,16 @@ void setup() {
       player_T[i][j].colour = Blank;
       rainbow[i][j].colour = Blank;
     }//column using inner for loop
+  }//row using outer for loop
+
+  int b = 64;
+
+  for (uint8_t i = 0; i < 8; i++) {
+
+    for (uint8_t j = 0; j < 8; j++) {
+      rainbow_storage[i][j].colour = CRGB{i * 8 + 7, j * 8 + 2, (b--) / 2};
+    }//column using inner for loop
+
   }//row using outer for loop
 
   Serial.begin(9600);//for higher speed - 115200
@@ -320,7 +331,7 @@ void  dispPT() {
 
 //Display a rainbow spectrum accross the 64 LEDs
 void  dispRainbow() {
-
+  /*
   int b = 64;
 
   for (uint8_t i = 0; i < 8; i++) {
@@ -330,6 +341,7 @@ void  dispRainbow() {
     }//column using inner for loop
 
   }//row using outer for loop
+  */
 
   for (int8_t i = 0; i < 8; i++) {
 
@@ -532,6 +544,9 @@ boolean game_End() {
 
 
 
+//To check fro draw condition
+boolean gameDraw(){
+}
 // To repeatedly run the desired code
 void loop() {
 
@@ -545,19 +560,16 @@ void loop() {
 
     do {
 
-      for (int8_t h = 0; h < 25; h++) {
+      for (int h = 0; h < 25; h++) {
+        for (int8_t i = 0; i < 8 ; i++) {
+          for (int8_t j = 0; j < 8; j++) {
+            rainbow[i][j].colour = rainbow_storage[7-(i+h)%8][j].colour;
+          }
+        }
         dispRainbow();
         delay(200);
-        for (int8_t i = 0; i < 8; i++) {
-
-          for (int8_t j = 0; j < 8; j++) {
-            Exit_switch = readPlayer(player);
-            rainbow[i][j].colour = CRGB{(i + h) % 8 * 4, abs(128 - (i + h) % 8 * 16) % 128, abs(252 - (i + h) % 8 * 6) % 128};
-          }//column using inner for loop
-
-        }//row using outer for loop
       }
-
+      
       for (int8_t i = 0; i < 5; i++) {
         boardColour();
         delay(200);
@@ -583,6 +595,8 @@ void loop() {
       Exit_switch = readPlayer(player);
     } while ((Exit_switch != 0)); //do-while loop
   }//if
-
+  if(gameDraw()){
+    
+  }
 }
 
